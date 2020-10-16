@@ -1,3 +1,4 @@
+from xml.dom.minidom import Element
 from mpegdash.utils import (
     parse_attr_value, parse_child_nodes, parse_node_value,
     write_attr_value, write_child_node, write_node_value
@@ -331,6 +332,19 @@ class Descriptor(XMLNode):
         write_attr_value(xmlnode, 'value', self.value)
         write_attr_value(xmlnode, 'id', self.id)
 
+class ContentProtection(Descriptor):
+    def __init__(self):
+        super().__init__()
+        self.children = []
+
+    def parse(self, xmlnode):
+        super().parse(xmlnode)
+        self.protection_infos = [c for c in xmlnode.childNodes if isinstance(c, Element)]
+
+    def write(self, xmlnode):
+        super().write(xmlnode)
+        for c in self.children:
+            xmlnode.appendChild(c)
 
 class ContentComponent(XMLNode):
     def __init__(self):
@@ -411,7 +425,7 @@ class RepresentationBase(XMLNode):
 
         self.frame_packings = parse_child_nodes(xmlnode, 'FramePacking', Descriptor)
         self.audio_channel_configurations = parse_child_nodes(xmlnode, 'AudioChannelConfiguration', Descriptor)
-        self.content_protections = parse_child_nodes(xmlnode, 'ContentProtection', Descriptor)
+        self.content_protections = parse_child_nodes(xmlnode, 'ContentProtection', ContentProtection)
         self.essential_properties = parse_child_nodes(xmlnode, 'EssentialProperty', Descriptor)
         self.supplemental_properties = parse_child_nodes(xmlnode, 'SupplementalProperty', Descriptor)
         self.inband_event_streams = parse_child_nodes(xmlnode, 'InbandEventStream', Descriptor)
